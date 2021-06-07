@@ -1,20 +1,33 @@
 ﻿using MyWebServerServer.HTTP;
+using MyWebServerServer.Routing;
 using System;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
+using static MyWebServerServer.HTTP.HttpConstants;
 
 namespace MyWebServerServer
 {
    
-    public class Server
+    public class HttpServer
     {
         private readonly IPAddress ipAddress;
         private readonly int port;
         TcpListener tcpListener;
 
-        public Server(string ipAddress, int port)
+        public HttpServer(Action<IRoutingTable> routingTable)
+            :this(5000, routingTable)
+        {
+
+        }
+
+        public HttpServer(int port, Action<IRoutingTable> routingTable)
+            :this("127.0.0.1", port, routingTable)
+        {
+
+        }
+        public HttpServer(string ipAddress, int port, Action<IRoutingTable> routingTable)
         {
             this.ipAddress = IPAddress.Parse(ipAddress);
             this.port = port;
@@ -28,20 +41,29 @@ namespace MyWebServerServer
 
             while (true)
             {
-                var client = await this.tcpListener.AcceptTcpClientAsync();
+                try
+                {
+                    var client = await this.tcpListener.AcceptTcpClientAsync();
 
 
-                using (var stream = client.GetStream())
+                    using (var stream = client.GetStream())
+                    {
+
+                        var requestString = await this.ReadRequest(stream);
+
+                        Console.WriteLine(requestString);
+
+                        var request = HttpRequest.Parse(requestString);
+
+                        await this.WriteResponse(stream);
+                    }
+                }
+                catch (Exception ex)
                 {
 
-                    var requestString = await this.ReadRequest(stream);
-
-                    Console.WriteLine(requestString);
-
-                    var request = HttpRequest.Parse(requestString);
-
-                    await this.WriteResponse(stream);
+                    Console.WriteLine(ex);
                 }
+                
             }
 
         }
@@ -49,7 +71,7 @@ namespace MyWebServerServer
         public async Task<string> ReadRequest(NetworkStream stream)
         {
 
-            var buffer = new byte[1024];
+            var buffer = new byte[bufferSize];
 
 
             StringBuilder requestBuilder = new StringBuilder();

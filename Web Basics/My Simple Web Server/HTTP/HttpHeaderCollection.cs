@@ -1,10 +1,12 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace MyWebServerServer.HTTP
 {
-   public class HttpHeaderCollection
+   public class HttpHeaderCollection : IEnumerable<HttpHeader>
     {
         private readonly Dictionary<string, HttpHeader> headers;
 
@@ -15,9 +17,31 @@ namespace MyWebServerServer.HTTP
 
         public int Count => this.headers.Count;
 
-        public void Add(HttpHeader httpHeader)
+        public void Add(string name, string value)
         {
-            this.headers.Add(httpHeader.Name, httpHeader);
+            var header = new HttpHeader(name, value);
+            this.headers.Add(header.Name, header);
+        }
+
+        public bool Contains(string cookieName)
+        {
+            if (!headers.ContainsKey(cookieName))
+            {
+                return false;
+            }
+            
+            return true;
+        }
+
+        public IEnumerator<HttpHeader> GetEnumerator()
+        {
+            return this.headers.Values.GetEnumerator();
+        }
+
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+          return  this.GetEnumerator();
         }
     }
 }

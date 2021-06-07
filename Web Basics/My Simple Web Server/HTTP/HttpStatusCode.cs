@@ -4,7 +4,7 @@ using System.Text;
 
 namespace MyWebServerServer.HTTP
 {
-    public enum HttpStatus
+    public enum HttpStatusCode
     {
         OK = 200
     }
